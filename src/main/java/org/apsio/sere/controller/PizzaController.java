@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
@@ -15,8 +16,13 @@ import java.util.concurrent.atomic.AtomicLong;
 public class PizzaController {
 
 	private static final String template = "Commande %s";
+	private final List<Pizza> historique = new ArrayList<Pizza>(1000);
 	private final AtomicLong counter = new AtomicLong();
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+	public PizzaController() {
+		historique.addAll(PizzaUtil.getPizzas());
+	}
 
 	@CrossOrigin
 	@RequestMapping(value={"/commanderPizza"})
@@ -24,17 +30,7 @@ public class PizzaController {
 		if (!this.rollSuccess(80)) {
 			throw new RuntimeException("Simulation d'echec de commande");
 		}
-		int duration = ThreadLocalRandom.current().nextInt(500, 2501);
-		if (duration > 2000) {
-			duration += ThreadLocalRandom.current().nextInt(500, 2501);
-		}
-		this.logger.info("API GET /commanderPizza (" + duration + " ms)");
-		try {
-			Thread.sleep(duration);
-		}
-		catch (InterruptedException interruptedException) {
-			// empty catch block
-		}
+		int duration = tempo("GET /commanderPizza", 500,2501);
 		long commandeCounter = this.counter.incrementAndGet();
 		return new PizzaResponse(commandeCounter, String.format(template, commandeCounter));
 	}
@@ -42,6 +38,24 @@ public class PizzaController {
 	private boolean rollSuccess(int poucentSuccess) {
 		int isSuccess = ThreadLocalRandom.current().nextInt(0, 101);
 		return isSuccess < poucentSuccess;
+	}
+
+	@CrossOrigin
+	@RequestMapping(value={"/commanderPizza"}, method={RequestMethod.PUT}, consumes = {"application/json"})
+	public PizzaResponse commanderPizza2(@RequestBody Pizza pizza) {
+		long commandeCounter = this.counter.incrementAndGet();
+		int duration = tempo("PUT /commanderPizza",500, 2501);
+		logger.info(pizza.toString());
+		pizza.setNom("Personnalisé");
+		historique.add(pizza);
+		return new PizzaResponse(commandeCounter, String.format(template, commandeCounter));
+	}
+
+	@CrossOrigin
+	@RequestMapping(value="/historique", produces = {"application/json"})
+	public List<Pizza> getHistorique() {
+		tempo("GET /historique", 100, 200);
+		return historique;
 	}
 
 	@CrossOrigin
@@ -58,20 +72,11 @@ public class PizzaController {
 		isJambon = Boolean.parseBoolean(jambon);
 		isMagret = Boolean.parseBoolean(magret);
 		isAnchois = Boolean.parseBoolean(anchois);
-		int duration = ThreadLocalRandom.current().nextInt(500, 2501);
-		if (duration > 2000) {
-			duration += ThreadLocalRandom.current().nextInt(500, 2501);
-		}
-		this.logger.info("API POST /commanderPizza (" + duration + " ms)");
-		Pizza pizza = new Pizza("sur mesure", pate, base, isMiel, isAnchois, isJambon, isMagret);
-		try {
-			Thread.sleep(duration);
-		}
-		catch (InterruptedException interruptedException) {
-			// empty catch block
-		}
+		int duration = tempo("POST /commanderPizza", 500,2501);
+		Pizza pizza = new Pizza("Personnalisé", pate, base, isMiel, isAnchois, isJambon, isMagret);
 		long commandeCounter = this.counter.incrementAndGet();
 		this.logger.info("Commande " + this.counter + " d'une " + pizza.toString());
+		historique.add(pizza);
 		return new PizzaResponse(commandeCounter, String.format(template, commandeCounter));
 	}
 
@@ -105,27 +110,29 @@ public class PizzaController {
 	@CrossOrigin
 	@RequestMapping(value={"/test"})
 	public String test() {
-		int duration = ThreadLocalRandom.current().nextInt(500, 2501);
-		try {
-			Thread.sleep(duration);
-		}
-		catch (InterruptedException interruptedException) {
-			// empty catch block
-		}
+		int duration = tempo("GET /test", 500, 2501);
 		return "Hello World";
 	}
 
 	@CrossOrigin
 	@RequestMapping(value={"/pizzas"})
 	public List<Pizza> pizzas() {
-		int duration = ThreadLocalRandom.current().nextInt(500, 2501);
-		this.logger.info("API GET /pizzas (" + duration + " ms)");
+		int duration = tempo("GET /pizzas",500,2501);
+		return PizzaUtil.getPizzas();
+	}
+
+	private int tempo(String api, int min, int max) {
+		int duration = ThreadLocalRandom.current().nextInt(min, max);
+		if (duration > max*0.9) {
+			duration += ThreadLocalRandom.current().nextInt(max, max*2);
+		}
+		this.logger.info("API " + api + " (" + duration + "ms)");
 		try {
 			Thread.sleep(duration);
 		}
 		catch (InterruptedException interruptedException) {
 			// empty catch block
 		}
-		return PizzaUtil.getPizzas();
+		return duration;
 	}
 }

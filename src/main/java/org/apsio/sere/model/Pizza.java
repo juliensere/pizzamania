@@ -17,6 +17,7 @@ public class Pizza {
     }
 
     public Pizza(String nom, String pate, String base, boolean miel, boolean anchois, boolean jambon, boolean magret) {
+        this.nom = nom;
         this.miel = miel;
         this.anchois = anchois;
         this.jambon = jambon;
@@ -25,19 +26,27 @@ public class Pizza {
         this.base = base;
     }
 
+    public String getNom() {
+        return nom;
+    }
+
+    public void setNom(String nom) {
+        this.nom = nom;
+    }
+
     public int getPrix() {
         int prix = 0;
-        if (this.base.equals("tomate")) {
+        if (this.base.equalsIgnoreCase("tomate")) {
             prix += 3;
         }
-        if (this.base.equals("creme")) {
+        if (this.base.equalsIgnoreCase("creme")) {
             prix += 4;
         }
         if (this.miel) {
-            prix += 2;
+            prix += 3;
         }
         if (this.anchois) {
-            ++prix;
+            prix += 1;
         }
         if (this.jambon) {
             prix += 2;
