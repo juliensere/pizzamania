@@ -1,5 +1,8 @@
 package org.apsio.sere.model;
 
+import java.time.LocalDate;
+import java.util.Date;
+
 public class Pizza {
 
     private String nom;
@@ -10,13 +13,16 @@ public class Pizza {
     private String pate;
     private String base;
     private String image;
+    private Date date;
 
     public Pizza() {
+        this.date = new Date();
         this.pate = "fine";
         this.base = "tomate";
     }
 
     public Pizza(String nom, String pate, String base, boolean miel, boolean anchois, boolean jambon, boolean magret) {
+        this.date = new Date();
         this.nom = nom;
         this.miel = miel;
         this.anchois = anchois;
@@ -26,12 +32,8 @@ public class Pizza {
         this.base = base;
     }
 
-    public String getNom() {
-        return nom;
-    }
-
-    public void setNom(String nom) {
-        this.nom = nom;
+    public Date getDate() {
+        return date;
     }
 
     public int getPrix() {
@@ -55,6 +57,18 @@ public class Pizza {
             prix += 4;
         }
         return prix;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    public String getNom() {
+        return nom;
+    }
+
+    public void setNom(String nom) {
+        this.nom = nom;
     }
 
     public boolean isMiel() {
