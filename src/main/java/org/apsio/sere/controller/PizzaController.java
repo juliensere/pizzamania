@@ -5,6 +5,7 @@ import org.apsio.sere.model.Pizza;
 import org.apsio.sere.model.PizzaResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -41,7 +42,6 @@ public class PizzaController {
 
 	private boolean rollDiceWithSuccessRateOf(int rateOfSuccess) {
 		int roll = ThreadLocalRandom.current().nextInt(0, 100);
-		logger.info(""+ roll + " of " + rateOfSuccess);
 		return roll < rateOfSuccess;
 	}
 
@@ -97,26 +97,7 @@ public class PizzaController {
 		return "Hello " + name;
 	}
 
-	@CrossOrigin
-	@RequestMapping(value={"/logger/info"})
-	public String info(@RequestParam(value="message") String message) {
-		this.logger.info(message);
-		return "";
-	}
 
-	@CrossOrigin
-	@RequestMapping(value={"/logger/warn"})
-	public String warn(@RequestParam(value="message") String message) {
-		this.logger.warn(message);
-		return "";
-	}
-
-	@CrossOrigin
-	@RequestMapping(value={"/logger/error"})
-	public String error(@RequestParam(value="message") String message) {
-		this.logger.error(message);
-		return "";
-	}
 
 	@CrossOrigin
 	@RequestMapping(value={"/test"})
@@ -130,6 +111,12 @@ public class PizzaController {
 	public List<Pizza> pizzas() {
 		int duration = tempo("GET /pizzas", LATENCY_MIN_MS, LATENCY_MAX_MS);
 		return PizzaUtil.getPizzas();
+	}
+
+	@ExceptionHandler({ RuntimeException.class })
+	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+	public void handleException(Exception exception) {
+		logger.error("Erreur : " + exception.getMessage());
 	}
 
 	private int tempo(String api, int min, int max) {
