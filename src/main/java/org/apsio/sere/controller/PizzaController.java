@@ -39,14 +39,16 @@ public class PizzaController {
 		return new PizzaResponse(commandeCounter, String.format(template, commandeCounter));
 	}
 
-	private boolean rollDiceWithSuccessRateOf(int poucentSuccess) {
-		int isSuccess = ThreadLocalRandom.current().nextInt(0, 101);
-		return isSuccess < poucentSuccess;
+	private boolean rollDiceWithSuccessRateOf(int rateOfSuccess) {
+		int roll = ThreadLocalRandom.current().nextInt(0, 100);
+		logger.info(""+ roll + " of " + rateOfSuccess);
+		return roll < rateOfSuccess;
 	}
 
 	@CrossOrigin
 	@RequestMapping(value={"/commanderPizza"}, method={RequestMethod.PUT}, consumes = {"application/json"})
 	public PizzaResponse commanderPizza2(@RequestBody Pizza pizza) {
+		simulateBusinessError();
 		long commandeCounter = this.counter.incrementAndGet();
 		int duration = tempo("PUT /commanderPizza", LATENCY_MIN_MS, LATENCY_MAX_MS);
 		logger.info(pizza.toString());
