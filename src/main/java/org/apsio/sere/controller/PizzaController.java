@@ -16,8 +16,14 @@ import java.util.concurrent.atomic.AtomicLong;
 public class PizzaController {
 
 	private static final String template = "Commande %s";
+
+	public static final int ROLL_SUCCESS_RATE = 50;
+	public static final int LATENCY_MIN_MS = 500;
+	public static final int LATENCY_MAX_MS = 1001;
+
 	private final List<Pizza> historique = new ArrayList<Pizza>(1000);
 	private final AtomicLong counter = new AtomicLong();
+
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	public PizzaController() {
@@ -27,15 +33,13 @@ public class PizzaController {
 	@CrossOrigin
 	@RequestMapping(value={"/commanderPizza"})
 	public PizzaResponse commanderPizza(@RequestParam(value="name", defaultValue="World") String name) {
-		if (!this.rollSuccess(80)) {
-			throw new RuntimeException("Simulation d'echec de commande");
-		}
-		int duration = tempo("GET /commanderPizza", 500,2501);
+		simulateBusinessError();
+		int duration = tempo("GET /commanderPizza", LATENCY_MIN_MS, LATENCY_MAX_MS);
 		long commandeCounter = this.counter.incrementAndGet();
 		return new PizzaResponse(commandeCounter, String.format(template, commandeCounter));
 	}
 
-	private boolean rollSuccess(int poucentSuccess) {
+	private boolean rollDiceWithSuccessRateOf(int poucentSuccess) {
 		int isSuccess = ThreadLocalRandom.current().nextInt(0, 101);
 		return isSuccess < poucentSuccess;
 	}
@@ -44,7 +48,7 @@ public class PizzaController {
 	@RequestMapping(value={"/commanderPizza"}, method={RequestMethod.PUT}, consumes = {"application/json"})
 	public PizzaResponse commanderPizza2(@RequestBody Pizza pizza) {
 		long commandeCounter = this.counter.incrementAndGet();
-		int duration = tempo("PUT /commanderPizza",500, 2501);
+		int duration = tempo("PUT /commanderPizza", LATENCY_MIN_MS, LATENCY_MAX_MS);
 		logger.info(pizza.toString());
 		pizza.setNom("Personnalisé");
 		historique.add(pizza);
@@ -54,6 +58,7 @@ public class PizzaController {
 	@CrossOrigin
 	@RequestMapping(value="/historique", produces = {"application/json"})
 	public List<Pizza> getHistorique() {
+		simulateBusinessError();
 		tempo("GET /historique", 100, 200);
 		return historique;
 	}
@@ -61,9 +66,7 @@ public class PizzaController {
 	@CrossOrigin
 	@RequestMapping(value={"/commanderPizza"}, method={RequestMethod.POST})
 	public PizzaResponse commanderPizza2(@RequestParam(value="base") String base, @RequestParam(value="pate") String pate, @RequestParam(value="anchois") String anchois, @RequestParam(value="miel") String miel, @RequestParam(value="magret") String magret, @RequestParam(value="jambon") String jambon) {
-		if (!this.rollSuccess(80)) {
-			throw new RuntimeException("Simulation d'echec de commande");
-		}
+		simulateBusinessError();
 		boolean isMiel = false;
 		boolean isJambon = false;
 		boolean isMagret = false;
@@ -72,12 +75,18 @@ public class PizzaController {
 		isJambon = Boolean.parseBoolean(jambon);
 		isMagret = Boolean.parseBoolean(magret);
 		isAnchois = Boolean.parseBoolean(anchois);
-		int duration = tempo("POST /commanderPizza", 500,2501);
+		int duration = tempo("POST /commanderPizza", LATENCY_MIN_MS, LATENCY_MAX_MS);
 		Pizza pizza = new Pizza("Personnalisé", pate, base, isMiel, isAnchois, isJambon, isMagret);
 		long commandeCounter = this.counter.incrementAndGet();
 		this.logger.info("Commande " + this.counter + " d'une " + pizza.toString());
 		historique.add(pizza);
 		return new PizzaResponse(commandeCounter, String.format(template, commandeCounter));
+	}
+
+	private void simulateBusinessError() {
+		if (!this.rollDiceWithSuccessRateOf(ROLL_SUCCESS_RATE)) {
+			throw new RuntimeException("Echec de commande");
+		}
 	}
 
 	@CrossOrigin
@@ -110,14 +119,14 @@ public class PizzaController {
 	@CrossOrigin
 	@RequestMapping(value={"/test"})
 	public String test() {
-		int duration = tempo("GET /test", 500, 2501);
+		int duration = tempo("GET /test", LATENCY_MIN_MS, LATENCY_MAX_MS);
 		return "Hello World";
 	}
 
 	@CrossOrigin
 	@RequestMapping(value={"/pizzas"})
 	public List<Pizza> pizzas() {
-		int duration = tempo("GET /pizzas",500,2501);
+		int duration = tempo("GET /pizzas", LATENCY_MIN_MS, LATENCY_MAX_MS);
 		return PizzaUtil.getPizzas();
 	}
 
