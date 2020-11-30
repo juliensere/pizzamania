@@ -67,7 +67,7 @@ public class PizzaController {
 
 	@CrossOrigin
 	@RequestMapping(value={"/commanderPizza"}, method={RequestMethod.POST})
-	public PizzaResponse commanderPizza2(@RequestParam(value="base") String base, @RequestParam(value="pate") String pate, @RequestParam(value="anchois") String anchois, @RequestParam(value="miel") String miel, @RequestParam(value="magret") String magret, @RequestParam(value="jambon") String jambon) {
+	public PizzaResponse commanderPizza2(@RequestParam(value="base") String base, @RequestParam(value="pate", defaultValue = "fine") String pate, @RequestParam(value="anchois") String anchois, @RequestParam(value="miel") String miel, @RequestParam(value="magret") String magret, @RequestParam(value="jambon") String jambon) {
 		simulateBusinessError();
 		boolean isMiel = false;
 		boolean isJambon = false;
